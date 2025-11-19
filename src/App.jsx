@@ -1,70 +1,59 @@
+import { useEffect, useState } from 'react'
+import Auth from './components/Auth'
+import CustomerView from './components/CustomerView'
+import RestaurantDashboard from './components/RestaurantDashboard'
+
 function App() {
+  const [session, setSession] = useState(null)
+
+  useEffect(() => {
+    const token = localStorage.getItem('token')
+    if (token) {
+      // we don't store user object persistently in demo; keep minimal session
+      setSession({ token })
+    }
+  }, [])
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      {/* Subtle pattern overlay */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(59,130,246,0.05),transparent_50%)]"></div>
-
-      <div className="relative min-h-screen flex items-center justify-center p-8">
-        <div className="max-w-2xl w-full">
-          {/* Header with Flames icon */}
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center justify-center mb-6">
-              <img
-                src="/flame-icon.svg"
-                alt="Flames"
-                className="w-24 h-24 drop-shadow-[0_0_25px_rgba(59,130,246,0.5)]"
-              />
-            </div>
-
-            <h1 className="text-5xl font-bold text-white mb-4 tracking-tight">
-              Flames Blue
-            </h1>
-
-            <p className="text-xl text-blue-200 mb-6">
-              Build applications through conversation
-            </p>
-          </div>
-
-          {/* Instructions */}
-          <div className="bg-slate-800/50 backdrop-blur-sm border border-blue-500/20 rounded-2xl p-8 shadow-xl mb-6">
-            <div className="flex items-start gap-4 mb-6">
-              <div className="flex-shrink-0 w-8 h-8 bg-blue-500 text-white rounded-lg flex items-center justify-center font-bold">
-                1
-              </div>
-              <div>
-                <h3 className="font-semibold text-white mb-1">Describe your idea</h3>
-                <p className="text-blue-200/80 text-sm">Use the chat panel on the left to tell the AI what you want to build</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-4 mb-6">
-              <div className="flex-shrink-0 w-8 h-8 bg-blue-500 text-white rounded-lg flex items-center justify-center font-bold">
-                2
-              </div>
-              <div>
-                <h3 className="font-semibold text-white mb-1">Watch it build</h3>
-                <p className="text-blue-200/80 text-sm">Your app will appear in this preview as the AI generates the code</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-4">
-              <div className="flex-shrink-0 w-8 h-8 bg-blue-500 text-white rounded-lg flex items-center justify-center font-bold">
-                3
-              </div>
-              <div>
-                <h3 className="font-semibold text-white mb-1">Refine and iterate</h3>
-                <p className="text-blue-200/80 text-sm">Continue the conversation to add features and make changes</p>
-              </div>
+      <div className="relative min-h-screen p-6 md:p-10">
+        <header className="max-w-5xl mx-auto flex items-center justify-between mb-8">
+          <div className="flex items-center gap-3">
+            <img src="/flame-icon.svg" alt="Flames" className="w-10 h-10" />
+            <div>
+              <h1 className="text-2xl font-bold text-white">Restaurant Orders</h1>
+              <p className="text-sm text-blue-300/70">Customers place orders • Restaurants manage in real time</p>
             </div>
           </div>
+          {session ? (
+            <button onClick={()=>{ localStorage.removeItem('token'); setSession(null) }} className="px-3 py-1.5 rounded bg-slate-800 border border-slate-700 text-white">Sign out</button>
+          ) : null}
+        </header>
 
-          {/* Footer */}
-          <div className="text-center">
-            <p className="text-sm text-blue-300/60">
-              No coding required • Just describe what you want
-            </p>
-          </div>
-        </div>
+        <main className="max-w-5xl mx-auto grid md:grid-cols-2 gap-8">
+          {!session ? (
+            <div className="md:col-span-2 bg-slate-800/50 backdrop-blur border border-blue-500/20 rounded-2xl p-6">
+              <h2 className="text-white text-xl font-semibold mb-4">Sign in to continue</h2>
+              <Auth onAuthed={(s)=>setSession(s)} />
+              <p className="text-blue-200/70 text-sm mt-3">Tip: choose "Restaurant" to open the live management view; choose "Customer" to place an order.</p>
+            </div>
+          ) : (
+            <>
+              <section className="bg-slate-800/50 backdrop-blur border border-blue-500/20 rounded-2xl p-6">
+                <h2 className="text-white text-lg font-semibold mb-4">Customer</h2>
+                <CustomerView token={session.token} user={session.user} />
+              </section>
+              <section className="bg-slate-800/50 backdrop-blur border border-blue-500/20 rounded-2xl p-6">
+                <h2 className="text-white text-lg font-semibold mb-4">Restaurant Dashboard</h2>
+                <RestaurantDashboard token={session.token} user={session.user} />
+              </section>
+            </>
+          )}
+        </main>
+
+        <footer className="max-w-5xl mx-auto mt-10 text-center text-blue-300/60 text-sm">
+          Built with real-time updates via SSE. This is a demo; authentication uses a simple token-based flow.
+        </footer>
       </div>
     </div>
   )
